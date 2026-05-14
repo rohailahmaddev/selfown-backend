@@ -1,10 +1,11 @@
 import mysql from "mysql2/promise"
 
 const pool = mysql.createPool({
-    host: process.env.HOST ,
-    user: process.env.USER ,
-    password: process.env.PASSWORD,
-    database: process.env.DATABASE
+    host: process.env.MYSQLHOST,
+    user: process.env.MYSQLUSER,
+    password: process.env.MYSQLPASSWORD,
+    database: process.env.MYSQLDATABASE,
+    port: process.env.MYSQLPORT
 })
 
 export default pool
