@@ -2,6 +2,11 @@ import dotenv from "dotenv";
 import app from "./app.js";
 import { Scheme } from "./model/index.model.js";
 
+
+dotenv.config({
+    path:"./.env"
+})
+
 //database connection
 
 Scheme()
