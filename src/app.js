@@ -6,7 +6,7 @@ const app = express()
 
 //cors configrations
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    origin: ['https://portfolio-d2402.web.app','https://selfown-3603e.web.app','http://localhost:5173', 'http://localhost:5174'],
     credentials: true 
   }))
 app.use(express.json());   
