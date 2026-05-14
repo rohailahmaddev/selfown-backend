@@ -4,7 +4,7 @@
   "description": "backend application to get blog on porfolio website",
   "license": "ISC",
   "author": "Rohail Ahmad",
-  "types": "module",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
