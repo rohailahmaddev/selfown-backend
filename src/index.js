@@ -1,9 +1,7 @@
-import dotenv from "dotenv";
-
-dotenv.config({
-    path:"./.env"
-})
-
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
+}
+  
 import app from "./app.js";
 import { Scheme } from "./model/index.model.js";
 
