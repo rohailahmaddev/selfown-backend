@@ -1,5 +1,5 @@
 import {Router} from "express"
-import { addBlog, deleteBlog, getBlogs, getSingleBlog, loginUser, logoutUser, registerUser } from "../controller/index.controllers.js";
+import { addBlog, deleteBlog, getBlogs, getSingleBlog, loginUser, logoutUser, registerUser, updateBlog } from "../controller/index.controllers.js";
 import {verifyAdmin, verifyToken} from "../middleware/auth.middleware.js"
 
 const router = Router();
@@ -16,5 +16,6 @@ router.route("/logout").post(logoutUser)
 router.route("/me").get(verifyToken,(req, res) => { res.json({ id: req.user.id, name: req.user.name, role: req.user.role })})
 router.route("/add-blogs").post(verifyAdmin,addBlog)
 router.route("/blogs/:id").delete(verifyAdmin, deleteBlog)
+router.route("/update-blog/:id").put(verifyAdmin,updateBlog)
 
 export default router

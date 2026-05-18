@@ -181,3 +181,36 @@ export const deleteBlog = async (req, res) => {
     return res.status(500).json({ message: 'Internal server error' })
   }
 }
+
+export const updateBlog = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, body, author_name, date } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ message: "Blog ID is required" });
+    }
+
+    if (!title || !body || !author_name || !date) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const [result] = await pool.query(
+      `UPDATE blogs 
+       SET title = ?, body = ?, author_name = ?, date = ?
+       WHERE id = ?`,
+      [title, body, author_name, date, id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Blog not found" });
+    }
+
+  return res.status(200).json({
+      message: "Blog updated successfully",
+  });
+  } catch (err) {
+    console.error("updateBlog error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
