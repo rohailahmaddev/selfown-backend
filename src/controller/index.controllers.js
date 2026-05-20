@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import pool from "../database/index.contentDB.js"
 import jwt from "jsonwebtoken"
+import { v2 as cloudinary } from "cloudinary";
 
 export const getBlogs = async (req, res) => {
    try {
@@ -213,4 +214,43 @@ export const updateBlog = async (req, res) => {
     console.error("updateBlog error:", err);
     return res.status(500).json({ message: "Internal server error" });
   }
+};
+
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+export const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith("image/")) {
+      return cb(new Error("Only image files are allowed"), false);
+    }
+    cb(null, true);
+  },
+});
+
+const uploadToCloudinary = (buffer) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: "blog_covers",
+        resource_type: "image",
+        transformation: [
+          { width: 1200, crop: "limit" },
+          { quality: "auto" },
+          { fetch_format: "auto" },
+        ],
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+    stream.end(buffer);
+  });
 };

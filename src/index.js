@@ -5,12 +5,9 @@ if (process.env.NODE_ENV !== 'production') {
 import app from "./app.js";
 import { Scheme } from "./model/index.model.js";
 
-
-
 //database connection
 
 Scheme()
-
 
 const PORT = process.env.PORT || 8080
 
