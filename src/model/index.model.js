@@ -23,6 +23,8 @@ export const Scheme = async() => {
            author_name VARCHAR(255) NOT NULL,
            date DATE NOT NULL,
            body TEXT NOT NULL,
+           image_url VARCHAR(500),
+           image_public_id VARCHAR(255),
            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )
@@ -32,5 +34,5 @@ export const Scheme = async() => {
     } catch (error) {
         throw Error(error)
     }
- 
+
 }

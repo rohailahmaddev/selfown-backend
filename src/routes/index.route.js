@@ -1,6 +1,7 @@
 import {Router} from "express"
 import { addBlog, deleteBlog, getBlogs, getSingleBlog, loginUser, logoutUser, registerUser, updateBlog } from "../controller/index.controllers.js";
 import {verifyAdmin, verifyToken} from "../middleware/auth.middleware.js"
+import upload from "../middleware/multer.middleware.js";
 
 const router = Router();
 
@@ -14,8 +15,25 @@ router.route("/logout").post(logoutUser)
 //protect route
 
 router.route("/me").get(verifyToken,(req, res) => { res.json({ id: req.user.id, name: req.user.name, role: req.user.role })})
-router.route("/add-blogs").post(verifyAdmin,addBlog)
+router.route("/add-blogs").post(
+    verifyAdmin,
+    upload.fields([
+      {
+          name:"avatar",
+          maxCount:1
+      },
+      {
+          name:"coverImage",
+          maxCount:1
+      }
+    ]),
+    addBlog
+  );
 router.route("/blogs/:id").delete(verifyAdmin, deleteBlog)
-router.route("/update-blog/:id").put(verifyAdmin,updateBlog)
+router.route("/update-blog/:id").put(
+    verifyAdmin,
+    upload.single("image"),
+    updateBlog
+  );
 
 export default router

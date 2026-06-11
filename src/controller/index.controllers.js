@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 import pool from "../database/index.contentDB.js"
 import jwt from "jsonwebtoken"
-import { v2 as cloudinary } from "cloudinary";
+import { uploadOnCloudinary, deleteFromCloudinary } from '../utils/cloudinary.js';
 
 export const getBlogs = async (req, res) => {
    try {
@@ -132,7 +132,8 @@ export const loginUser = async (req, res) => {
    }
  };
 
-export const addBlog = async (req, res) => {
+ export const addBlog = async (req, res) => {
+  let image;
   try {
     const { title, body, author_name, date } = req.body;
 
@@ -140,14 +141,27 @@ export const addBlog = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
+    const imageLocalPath = req.file?.path;
+
+    if (imageLocalPath) {
+      try {
+        image = await uploadOnCloudinary(imageLocalPath);
+      } catch (error) {
+        return res.status(500).json({ message: "Failed to upload image" });
+      }
+    }
+
     const [result] = await pool.query(
-      `INSERT INTO blogs (title, body, author_name, date) VALUES (?, ?, ?, ?)`,
-      [title, body, author_name, date]
+      `INSERT INTO blogs (title, body, author_name, date, image_url, image_public_id) VALUES (?, ?, ?, ?, ?, ?)`,
+      [title, body, author_name, date, image?.url || null, image?.public_id || null]
     );
 
     return res.status(201).json({ message: "Blog created", id: result.insertId });
   } catch (err) {
     console.error("addBlog error:", err);
+    if (image) {
+      await deleteFromCloudinary(image.public_id);
+    }
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -214,43 +228,4 @@ export const updateBlog = async (req, res) => {
     console.error("updateBlog error:", err);
     return res.status(500).json({ message: "Internal server error" });
   }
-};
-
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key:    process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-export const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-  fileFilter: (req, file, cb) => {
-    if (!file.mimetype.startsWith("image/")) {
-      return cb(new Error("Only image files are allowed"), false);
-    }
-    cb(null, true);
-  },
-});
-
-const uploadToCloudinary = (buffer) => {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      {
-        folder: "blog_covers",
-        resource_type: "image",
-        transformation: [
-          { width: 1200, crop: "limit" },
-          { quality: "auto" },
-          { fetch_format: "auto" },
-        ],
-      },
-      (error, result) => {
-        if (error) return reject(error);
-        resolve(result);
-      }
-    );
-    stream.end(buffer);
-  });
 };
