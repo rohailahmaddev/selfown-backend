@@ -17,16 +17,7 @@ router.route("/logout").post(logoutUser)
 router.route("/me").get(verifyToken,(req, res) => { res.json({ id: req.user.id, name: req.user.name, role: req.user.role })})
 router.route("/add-blogs").post(
     verifyAdmin,
-    upload.fields([
-      {
-          name:"avatar",
-          maxCount:1
-      },
-      {
-          name:"coverImage",
-          maxCount:1
-      }
-    ]),
+    upload.single("image"),
     addBlog
   );
 router.route("/blogs/:id").delete(verifyAdmin, deleteBlog)
