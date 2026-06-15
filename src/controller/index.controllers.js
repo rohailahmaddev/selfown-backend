@@ -148,7 +148,7 @@ export const addBlog = async (req, res) => {
       try {
         image = await uploadOnCloudinary(fileBuffer, "blogs");
       } catch (error) {
-        return res.status(500).json({ message: "Failed to upload image" });
+        return res.status(500).json({ message: error.message });
       }
     }
 
