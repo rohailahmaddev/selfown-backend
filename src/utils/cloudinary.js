@@ -1,55 +1,67 @@
-import {v2 as cloudinary} from "cloudinary"
-import fs from "fs"
-import dotenv from "dotenv"
+import { v2 as cloudinary } from "cloudinary";
+import streamifier from "streamifier";
 
-dotenv.config()
+const UPLOAD_TIMEOUT = 30000;
 
-//cloudinary configurations
 cloudinary.config({
-    cloud_name:process.env.CLOUD_NAME,
-    api_key:process.env.CLOUDINARY_API_KEY,
-    api_secret:process.env.CLOUDINARY_SECRET_KEY
-})
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-const deleteLocalFile = (filePath) => {
+export const deleteFromCloudinary = async (publicId) => {
     try {
-        if (filePath && fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath)
-        }
-    } catch (err) {
-        console.error(`Failed to delete local file: ${filePath}`, err)
-    }
-}
-
-const uploadOnCloudinary = async (localFilePath) => {
-    try {
-        if(!localFilePath) return null
-        const response = await cloudinary.uploader.upload(
-            localFilePath,{
-                resource_type:"auto"
-            }
-        )
-
-        console.log("File is uploaded on cloudinary. File src: " + response.url)
-         
-        // delete file from server
-        deleteLocalFile(localFilePath)
-
-        return response
-        
+      if (!publicId) return null;
+  
+      const result = await cloudinary.uploader.destroy(publicId);
+  
+      return result;
     } catch (error) {
-        console.error("Cloudinary upload failed:", error?.message || error)
-        deleteLocalFile(localFilePath)
-        return null
+      console.error("Cloudinary delete failed:", error);
+      return null;
     }
-}
+};
 
-const deleteFromCloudinary = async (publicId) => {
-    try {
-        const result = await cloudinary.uploader.destroy(publicId)
-    } catch (error) {
-        return null
+export const uploadOnCloudinary = (buffer, folder = "uploads") => {
+  return new Promise((resolve, reject) => {
+    if (!buffer || !Buffer.isBuffer(buffer)) {
+      return reject(new Error("Invalid buffer"));
     }
-}
 
-export {uploadOnCloudinary, deleteFromCloudinary}
+    if (buffer.length === 0) {
+      return reject(new Error("Buffer is empty"));
+    }
+
+    if (buffer.length > 10 * 1024 * 1024) {
+      return reject(new Error("File too large"));
+    }
+
+    let isSettled = false;
+
+    const readStream = streamifier.createReadStream(buffer);
+
+    const timeout = setTimeout(() => {
+      if (isSettled) return;
+      isSettled = true;
+      readStream.destroy();
+      reject(new Error("Upload timed out"));
+    }, UPLOAD_TIMEOUT);
+
+    const stream = cloudinary.uploader.upload_stream(
+      { resource_type: "auto", folder },
+      (error, result) => {
+        if (isSettled) return;
+        isSettled = true;
+        clearTimeout(timeout);
+
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+
+    readStream.on("error", reject);
+    stream.on("error", reject);
+
+    readStream.pipe(stream);
+  });
+};

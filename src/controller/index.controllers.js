@@ -132,8 +132,9 @@ export const loginUser = async (req, res) => {
    }
  };
 
-export const addBlog = async (req, res) => {
+ export const addBlog = async (req, res) => {
   let image;
+
   try {
     const { title, body, author_name, date } = req.body;
 
@@ -141,28 +142,45 @@ export const addBlog = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    const imageLocalPath = req.file?.path;
+    const fileBuffer = req.file?.buffer;
 
-    if (imageLocalPath) {
+    if (fileBuffer) {
       try {
-        image = await uploadOnCloudinary(imageLocalPath);
+        image = await uploadOnCloudinary(fileBuffer, "blogs");
       } catch (error) {
         return res.status(500).json({ message: "Failed to upload image" });
       }
     }
 
     const [result] = await pool.query(
-      `INSERT INTO blogs (title, body, author_name, date, image_url, image_public_id) VALUES (?, ?, ?, ?, ?, ?)`,
-      [title, body, author_name, date, image?.url || null, image?.public_id || null]
+      `INSERT INTO blogs (title, body, author_name, date, image_url, image_public_id)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        title,
+        body,
+        author_name,
+        date,
+        image?.secure_url || null,
+        image?.public_id || null
+      ]
     );
 
-    return res.status(201).json({ message: "Blog created", id: result.insertId });
+    return res.status(201).json({
+      message: "Blog created",
+      id: result.insertId
+    });
+
   } catch (err) {
     console.error("addBlog error:", err);
-    if (image) {
+
+    // optional cleanup (only if upload succeeded)
+    if (image?.public_id) {
       await deleteFromCloudinary(image.public_id);
     }
-    return res.status(500).json({ message: err.message });
+
+    return res.status(500).json({
+      message: err.message
+    });
   }
 };
 
