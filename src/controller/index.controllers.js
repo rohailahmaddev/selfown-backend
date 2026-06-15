@@ -6,9 +6,18 @@ import { uploadOnCloudinary, deleteFromCloudinary } from '../utils/cloudinary.js
 export const getBlogs = async (req, res) => {
    try {
      const [blogs] = await pool.query(
-       `SELECT id, title, body,author_name, date,created_at
-        FROM blogs
-        ORDER BY created_at DESC`
+      `SELECT 
+          id,
+          title,
+          body,
+          author_name,
+          date,
+          image_url,
+          image_public_id,
+          created_at,
+          updated_at
+       FROM blogs
+       ORDER BY created_at DESC`
      );
  
      return res.status(200).json({ data: blogs });
