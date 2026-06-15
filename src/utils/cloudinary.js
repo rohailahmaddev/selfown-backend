@@ -22,55 +22,16 @@ export const deleteFromCloudinary = async (publicId) => {
     }
 };
 
-export const uploadOnCloudinary = (buffer, folder = "uploads") => {
-    return new Promise((resolve, reject) => {
-      if (!buffer || !Buffer.isBuffer(buffer)) {
-        return reject(new Error("Invalid buffer"));
-      }
-  
-      if (buffer.length === 0) {
-        return reject(new Error("Buffer is empty"));
-      }
-  
-      if (buffer.length > 10 * 1024 * 1024) {
-        return reject(new Error("File too large"));
-      }
-  
-      let isSettled = false;
-  
-      const safeResolve = (result) => {
-        if (isSettled) return;
-        isSettled = true;
-        clearTimeout(timeout);
+const uploadToCloudinary = (fileBuffer) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: "blogs" },
+      (error, result) => {
+        if (error) return reject(error);
         resolve(result);
-      };
-  
-      const safeReject = (error) => {
-        if (isSettled) return;
-        isSettled = true;
-        clearTimeout(timeout);
-        reject(error);
-      };
-  
-      const readStream = streamifier.createReadStream(buffer);
-  
-      const timeout = setTimeout(() => {
-        safeReject(new Error("Upload timed out"));
-        readStream.destroy();
-      }, UPLOAD_TIMEOUT);
-  
-      const stream = cloudinary.uploader.upload_stream(
-        { resource_type: "auto", folder },
-        (error, result) => {
-          if (error) return safeReject(error);
-          safeResolve(result);
-        }
-      );
-  
-      // Use safeReject for ALL error handlers
-      readStream.on("error", safeReject);
-      stream.on("error", safeReject);
-  
-      readStream.pipe(stream);
-    });
-  };
+      }
+    );
+
+    streamifier.createReadStream(fileBuffer).pipe(stream);
+  });
+};
