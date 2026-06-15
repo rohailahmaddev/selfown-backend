@@ -23,45 +23,54 @@ export const deleteFromCloudinary = async (publicId) => {
 };
 
 export const uploadOnCloudinary = (buffer, folder = "uploads") => {
-  return new Promise((resolve, reject) => {
-    if (!buffer || !Buffer.isBuffer(buffer)) {
-      return reject(new Error("Invalid buffer"));
-    }
-
-    if (buffer.length === 0) {
-      return reject(new Error("Buffer is empty"));
-    }
-
-    if (buffer.length > 10 * 1024 * 1024) {
-      return reject(new Error("File too large"));
-    }
-
-    let isSettled = false;
-
-    const readStream = streamifier.createReadStream(buffer);
-
-    const timeout = setTimeout(() => {
-      if (isSettled) return;
-      isSettled = true;
-      readStream.destroy();
-      reject(new Error("Upload timed out"));
-    }, UPLOAD_TIMEOUT);
-
-    const stream = cloudinary.uploader.upload_stream(
-      { resource_type: "auto", folder },
-      (error, result) => {
+    return new Promise((resolve, reject) => {
+      if (!buffer || !Buffer.isBuffer(buffer)) {
+        return reject(new Error("Invalid buffer"));
+      }
+  
+      if (buffer.length === 0) {
+        return reject(new Error("Buffer is empty"));
+      }
+  
+      if (buffer.length > 10 * 1024 * 1024) {
+        return reject(new Error("File too large"));
+      }
+  
+      let isSettled = false;
+  
+      const safeResolve = (result) => {
         if (isSettled) return;
         isSettled = true;
         clearTimeout(timeout);
-
-        if (error) return reject(error);
         resolve(result);
-      }
-    );
-
-    readStream.on("error", reject);
-    stream.on("error", reject);
-
-    readStream.pipe(stream);
-  });
-};
+      };
+  
+      const safeReject = (error) => {
+        if (isSettled) return;
+        isSettled = true;
+        clearTimeout(timeout);
+        reject(error);
+      };
+  
+      const readStream = streamifier.createReadStream(buffer);
+  
+      const timeout = setTimeout(() => {
+        safeReject(new Error("Upload timed out"));
+        readStream.destroy();
+      }, UPLOAD_TIMEOUT);
+  
+      const stream = cloudinary.uploader.upload_stream(
+        { resource_type: "auto", folder },
+        (error, result) => {
+          if (error) return safeReject(error);
+          safeResolve(result);
+        }
+      );
+  
+      // Use safeReject for ALL error handlers
+      readStream.on("error", safeReject);
+      stream.on("error", safeReject);
+  
+      readStream.pipe(stream);
+    });
+  };
