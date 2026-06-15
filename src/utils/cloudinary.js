@@ -39,13 +39,13 @@ export const uploadOnCloudinary = (buffer, folder = "uploads") => {
      
     
     const readStream = streamifier.createReadStream(buffer);
-
+    console.log("rohail")
     const timeout = setTimeout(() => {
       console.log("I")
       safeReject(new Error("Upload timed out"));
       readStream.destroy();
     }, UPLOAD_TIMEOUT);
-
+    console.log("ahmad")
     const stream = cloudinary.uploader.upload_stream(
       { resource_type: "auto", folder },
       (error, result) => {
