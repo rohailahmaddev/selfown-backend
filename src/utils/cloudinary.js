@@ -45,21 +45,42 @@ export const uploadOnCloudinary = (buffer, folder = "uploads") => {
       safeReject(new Error("Upload timed out"));
       readStream.destroy();
     }, UPLOAD_TIMEOUT);
-    console.log("ahmad")
+    console.log("Before upload_stream");
+
     const stream = cloudinary.uploader.upload_stream(
       { resource_type: "auto", folder },
       (error, result) => {
-        console.log("L")
-        if (error) return safeReject(error);
+        console.log("Callback reached");
+    
+        if (error) {
+          console.log("Cloudinary Error:", error);
+          return safeReject(error);
+        }
+    
+        console.log("Cloudinary Success:", result);
         safeResolve(result);
       }
     );
-
-    // Handle errors from BOTH streams
-    stream.on("error", safeReject);
-    readStream.on("error", safeReject);
+    
+    console.log("After upload_stream");
+    
+    stream.on("error", (err) => {
+      console.log("Stream Error:", err);
+      safeReject(err);
+    });
+    
+    readStream.on("error", (err) => {
+      console.log("Read Stream Error:", err);
+      safeReject(err);
+    });
+    
+    readStream.on("end", () => {
+      console.log("Read Stream Ended");
+    });
     
     readStream.pipe(stream);
+    
+    console.log("Pipe initiated");
   });
 };
 
