@@ -1,7 +1,6 @@
 import app from "../app.js";
 import { Scheme } from "../model/index.model.js";
 
-console.log("🚀 api/index.js loaded");
 
 let initialized = false;
 

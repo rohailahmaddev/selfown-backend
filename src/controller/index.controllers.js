@@ -162,7 +162,7 @@ export const loginUser = async (req, res) => {
     if (image) {
       await deleteFromCloudinary(image.public_id);
     }
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: err.message });
   }
 };
 
