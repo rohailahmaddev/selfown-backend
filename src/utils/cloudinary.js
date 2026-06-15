@@ -10,7 +10,7 @@ cloudinary.config({
 });
 console.log(process.env.CLOUD_NAME);
 console.log(process.env.CLOUDINARY_API_KEY);
-console.log(process.env.CLOUDINARY_API_SECRET);
+console.log(process.env.CLOUDINARY_SECRET_KEY);
 
 export const uploadOnCloudinary = (buffer, folder = "uploads") => {
   return new Promise((resolve, reject) => {
