@@ -34,7 +34,7 @@ export const getSingleBlog = async (req, res) => {
     const {id} = req.params
     console.log(id)
      const [blogs] = await pool.query(
-       `SELECT id, title, body,author_name, date,created_at
+       `SELECT id,image_url, title, body,author_name, date,created_at
         FROM blogs
         WHERE id = ?`,[id]
      );
