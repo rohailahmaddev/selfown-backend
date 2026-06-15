@@ -22,7 +22,7 @@ export const deleteFromCloudinary = async (publicId) => {
     }
 };
 
-const uploadToCloudinary = (fileBuffer) => {
+const uploadOnCloudinary = (fileBuffer) => {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       { folder: "blogs" },
@@ -35,3 +35,5 @@ const uploadToCloudinary = (fileBuffer) => {
     streamifier.createReadStream(fileBuffer).pipe(stream);
   });
 };
+
+export {uploadOnCloudinary}
