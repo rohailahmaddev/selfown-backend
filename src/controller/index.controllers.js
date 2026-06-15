@@ -89,7 +89,7 @@ export const loginUser = async (req, res) => {
      }
 
      const [rows] = await pool.query(
-       'SELECT * FROM user WHERE email = ?',
+       'SELECT * FROM `user` WHERE email = ?',
        [email]
      );
  
@@ -128,7 +128,7 @@ export const loginUser = async (req, res) => {
  
    } catch (err) {
      console.error('Login error:', err);
-     return res.status(500).json({ message: err });
+     return res.status(500).json({ message: err.message });
    }
  };
 
