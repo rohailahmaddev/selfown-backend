@@ -5,8 +5,14 @@ let initialized = false;
 
 export default async function handler(req, res) {
   if (!initialized) {
-    await Scheme();
-    initialized = true;
+    try {
+      await Scheme();
+      initialized = true;
+      console.log("✅ Schema initialized");
+    } catch (err) {
+      console.error("❌ Schema init failed:", err.message);
+      // don't set initialized = true, so it retries next request
+    }
   }
   return app(req, res);
 }
