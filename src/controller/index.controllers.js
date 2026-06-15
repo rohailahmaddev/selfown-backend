@@ -145,7 +145,7 @@ export const addBlog = async (req, res) => {
     const fileBuffer = req.file?.buffer;
         // Debug logging
         console.log("Request body:", { title, body: body?.substring(0, 50), author_name, date });
-        console.log("File present:", !!fileBuffer, "Size:", fileBuffer?.length);
+        console.log("File present:",fileBuffer, "Size:", fileBuffer?.length);
 
     if (fileBuffer) {
       try {
