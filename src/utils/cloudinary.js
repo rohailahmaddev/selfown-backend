@@ -17,7 +17,7 @@ export const uploadOnCloudinary = (buffer, folder = "uploads") => {
     }
      console.log("H")
     if (buffer.length > 10 * 1024 * 1024) {
-      console.log("A")
+      console.log("bufferlength")
       return reject(new Error("File too large"));
     }
     console.log("A")
