@@ -132,7 +132,7 @@ export const loginUser = async (req, res) => {
    }
  };
 
- export const addBlog = async (req, res) => {
+export const addBlog = async (req, res) => {
   let image;
   try {
     const { title, body, author_name, date } = req.body;
