@@ -5,7 +5,7 @@ export const Scheme = async() => {
     try {
         await pool.query(
             `
-            CREATE TABLE IF NOT EXISTS user(
+            CREATE TABLE IF NOT EXISTS \`user\`(
               id INT AUTO_INCREMENT PRIMARY KEY,
               username VARCHAR(150) NOT NULL,
               email VARCHAR(100) UNIQUE NOT NULL,
