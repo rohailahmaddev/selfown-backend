@@ -149,12 +149,13 @@ export const addBlog = async (req, res) => {
 
     if (fileBuffer) {
       try {
+        console.log("Dfjslkdfslkdflkjiead")
         image = await uploadOnCloudinary(fileBuffer, "blogs");
       } catch (error) {
         return res.status(500).json({ message: error.message });
       }
     }
-
+    console.log("dkfjosdjfoiejfioefdskjfl;skdjfl;kasjdf;lkjasl;kdjf")
     const [result] = await pool.query(
       `INSERT INTO blogs (title, body, author_name, date, image_url, image_public_id)
        VALUES (?, ?, ?, ?, ?, ?)`,
