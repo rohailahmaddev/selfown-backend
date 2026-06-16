@@ -46,6 +46,7 @@ export const getSingleBlog = async (req, res) => {
       image_url,
       created_at
    FROM blogs
+   WHERE id != ?
    ORDER BY created_at DESC
    LIMIT 4
    `,
