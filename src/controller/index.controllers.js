@@ -143,34 +143,29 @@ export const addBlog = async (req, res) => {
   let image;
 
   try {
-    const { title, body, author_name, date } = req.body;
+    const { title, body, author_name } = req.body;
 
-    if (!title || !body || !author_name || !date) {
+    if (!title || !body || !author_name ) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
     const fileBuffer = req.file?.buffer;
-        // Debug logging
-        console.log("Request body:", { title, body: body?.substring(0, 50), author_name, date });
-        console.log("File present:",fileBuffer, "Size:", fileBuffer?.length);
 
     if (fileBuffer) {
       try {
-        console.log("Dfjslkdfslkdflkjiead")
         image = await uploadOnCloudinary(fileBuffer, "blogs");
       } catch (error) {
         return res.status(500).json({ message: error.message });
       }
     }
-    console.log("dkfjosdjfoiejfioefdskjfl;skdjfl;kasjdf;lkjasl;kdjf")
+    
     const [result] = await pool.query(
-      `INSERT INTO blogs (title, body, author_name, date, image_url, image_public_id)
-       VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO blogs (title, body, author_name, image_url, image_public_id)
+       VALUES (?, ?, ?, ?, ?)`,
       [
         title,
         body,
         author_name,
-        date,
         image?.secure_url || null,
         image?.public_id || null
       ]
@@ -227,23 +222,45 @@ export const deleteBlog = async (req, res) => {
 }
 
 export const updateBlog = async (req, res) => {
+  let image;
+
   try {
     const { id } = req.params;
-    const { title, body, author_name, date } = req.body;
+    const { title, body, author_name } = req.body;
 
+    
     if (!id) {
       return res.status(400).json({ message: "Blog ID is required" });
     }
 
-    if (!title || !body || !author_name || !date) {
+    const fileBuffer = req.file?.buffer
+
+    if(!fileBuffer){
+      return res.status(400).json({ message: "image is required required" })
+    }
+
+    if ( !title || !body || !author_name ) {
       return res.status(400).json({ message: "All fields are required" });
+    }
+
+    try {
+      image = await uploadOnCloudinary(fileBuffer, "blogs");
+    } catch (error) {
+      return res.status(500).json({ message: error.message });
     }
 
     const [result] = await pool.query(
       `UPDATE blogs 
-       SET title = ?, body = ?, author_name = ?, date = ?
+       SET title = ?, body = ?, author_name = ?, image_url = ?,image_public_id = ?,
        WHERE id = ?`,
-      [title, body, author_name, date, id]
+      [ 
+       title,
+       body, 
+       author_name, 
+       image?.secure_url || null,
+       image?.public_id || null,
+       id
+      ]
     );
 
     if (result.affectedRows === 0) {
