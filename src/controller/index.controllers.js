@@ -237,54 +237,67 @@ export const deleteBlog = async (req, res) => {
 }
 
 export const updateBlog = async (req, res) => {
-  let image;
-
   try {
     const { id } = req.params;
-    const { title, body, author_name } = req.body;
-
+    const { title, body, author_name, remove_image, existing_image_url } = req.body;
 
     if (!id) {
       return res.status(400).json({ message: "Blog ID is required" });
-    }
-
-    const fileBuffer = req.file?.buffer
-
-    if (!fileBuffer) {
-      return res.status(400).json({ message: "image is required required" })
     }
 
     if (!title || !body || !author_name) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    try {
-      image = await uploadOnCloudinary(fileBuffer, "blogs");
-    } catch (error) {
-      return res.status(500).json({ message: error.message });
+    // fetch current blog to get old cloudinary public_id
+    const [[currentBlog]] = await pool.query(
+      `SELECT image_url, image_public_id FROM blogs WHERE id = ?`,
+      [id]
+    );
+
+    if (!currentBlog) {
+      return res.status(404).json({ message: "Blog not found" });
+    }
+
+    let image_url = currentBlog.image_url;
+    let image_public_id = currentBlog.image_public_id;
+
+    if (req.file?.buffer) {
+      // user uploaded a new image — delete old one then upload new
+      if (currentBlog.image_public_id) {
+        await cloudinary.uploader.destroy(currentBlog.image_public_id);
+      }
+      const uploaded = await uploadOnCloudinary(req.file.buffer, "blogs");
+      image_url = uploaded.secure_url;
+      image_public_id = uploaded.public_id;
+
+    } else if (remove_image === "true") {
+      // user explicitly removed the image
+      if (currentBlog.image_public_id) {
+        await cloudinary.uploader.destroy(currentBlog.image_public_id);
+      }
+      image_url = null;
+      image_public_id = null;
+
+    } else if (existing_image_url) {
+      // user didn't touch the image — keep as-is
+      image_url = existing_image_url;
+      image_public_id = currentBlog.image_public_id;
     }
 
     const [result] = await pool.query(
       `UPDATE blogs 
-       SET title = ?, body = ?, author_name = ?, image_url = ?,image_public_id = ?
+       SET title = ?, body = ?, author_name = ?, image_url = ?, image_public_id = ?
        WHERE id = ?`,
-      [
-        title,
-        body,
-        author_name,
-        image?.secure_url || null,
-        image?.public_id || null,
-        id
-      ]
+      [title, body, author_name, image_url, image_public_id, id]
     );
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: "Blog not found" });
     }
 
-    return res.status(200).json({
-      message: "Blog updated successfully",
-    });
+    return res.status(200).json({ message: "Blog updated successfully" });
+
   } catch (err) {
     console.error("updateBlog error:", err);
     return res.status(500).json({ message: "Internal server error" });
