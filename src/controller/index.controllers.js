@@ -15,7 +15,7 @@ export const getBlogs = async (req, res) => {
       image_url,
       created_at
    FROM blogs
-   ORDER BY created_at DESC
+   ORDER BY created_at DESC`
      );
  
      return res.status(200).json({ data: blogs });
