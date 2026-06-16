@@ -251,7 +251,7 @@ export const updateBlog = async (req, res) => {
 
     const [result] = await pool.query(
       `UPDATE blogs 
-       SET title = ?, body = ?, author_name = ?, image_url = ?,image_public_id = ?,
+       SET title = ?, body = ?, author_name = ?, image_url = ?,image_public_id = ?
        WHERE id = ?`,
       [ 
        title,
