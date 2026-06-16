@@ -48,7 +48,7 @@ export const getSingleBlog = async (req, res) => {
    FROM blogs
    ORDER BY created_at DESC
    LIMIT 4
-   `
+   `,
       [id]
     )
 
