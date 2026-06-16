@@ -7,15 +7,15 @@ export const getBlogs = async (req, res) => {
    try {
      const [blogs] = await pool.query(
       `SELECT 
-          id,
-          title,
-          body,
-          author_name,
-          date,
-          image_url,
-          created_at,
-       FROM blogs
-       ORDER BY created_at DESC`
+      id,
+      title,
+      body,
+      author_name,
+      date,
+      image_url,
+      created_at
+   FROM blogs
+   ORDER BY created_at DESC
      );
  
      return res.status(200).json({ data: blogs });
