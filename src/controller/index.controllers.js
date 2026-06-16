@@ -4,8 +4,8 @@ import jwt from "jsonwebtoken"
 import { uploadOnCloudinary, deleteFromCloudinary } from '../utils/cloudinary.js';
 
 export const getBlogs = async (req, res) => {
-   try {
-     const [blogs] = await pool.query(
+  try {
+    const [blogs] = await pool.query(
       `SELECT 
       id,
       title,
@@ -16,40 +16,56 @@ export const getBlogs = async (req, res) => {
       created_at
    FROM blogs
    ORDER BY created_at DESC`
-     );
- 
-     return res.status(200).json({ data: blogs });
- 
-   } catch (err) {
-     console.error("getBlogs error:", err);
-     return res.status(500).json({ message: "Internal server error" });
-   }
+    );
+
+    return res.status(200).json({ data: blogs });
+
+  } catch (err) {
+    console.error("getBlogs error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 export const getSingleBlog = async (req, res) => {
-   try {
-   console.log(req.params.id)
-    const {id} = req.params
-    console.log(id)
-     const [blogs] = await pool.query(
-       `SELECT id,image_url, title, body,author_name, date,created_at
-        FROM blogs
-        WHERE id = ?`,[id]
-     );
-     if(blogs.length === 0){
-      return res.status(404).json({message:"blog not found"})
-     }
-     
-     return res.status(200).json({ data: blogs[0] });
-   } catch (err) {
-     console.error("getBlogs error:", err);
-     return res.status(500).json({ message: "Internal server error" });
-   }
+  try {
+    const { id } = req.params
+    const [blogs] = await pool.query(
+      `SELECT id,image_url, title, body,author_name, date,created_at
+       FROM blogs
+       WHERE id = ?`, [id]
+    );
+    if (blogs.length === 0) {
+      return res.status(404).json({ message: "blog not found" })
+    }
+
+    const [related] = await pool.query(
+      `SELECT 
+      id,
+      title,
+      body,
+      author_name,
+      date,
+      image_url,
+      created_at
+   FROM blogs
+   ORDER BY created_at DESC
+   LIMIT 4
+   `
+      [id]
+    )
+
+
+
+    return res.status(200).json({ data: blogs[0], related });
+  } catch (err) {
+    console.error("getBlogs error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 export const registerUser = async (req, res) => {
   try {
-   console.log(req.body)
+    console.log(req.body)
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
@@ -88,64 +104,64 @@ export const registerUser = async (req, res) => {
 };
 
 export const loginUser = async (req, res) => {
-   try {
-     const { email, password } = req.body;
- 
-     if (!email || !password) {
-       return res.status(400).json({ message: 'Email and password are required' });
-     }
+  try {
+    const { email, password } = req.body;
 
-     const [rows] = await pool.query(
-       'SELECT * FROM `user` WHERE email = ?',
-       [email]
-     );
- 
-     if (rows.length === 0) {
-       return res.status(404).json({ message: 'User not found' });
-     }
- 
-     const user = rows[0];
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
 
-     const isMatch = await bcrypt.compare(password, user.password);
- 
-     if (!isMatch) {
-       return res.status(401).json({ message: 'Invalid credentials' });
-     }
+    const [rows] = await pool.query(
+      'SELECT * FROM `user` WHERE email = ?',
+      [email]
+    );
 
-     const token = jwt.sign(
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const user = rows[0];
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign(
       { id: user.id, name: user.username, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     )
-     
+
     res.cookie('token', token, {
-      httpOnly: true,      
+      httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000
     })
 
-     return res.status(200).json({
+    return res.status(200).json({
       message: 'Login successful',
       user: {
-         name: user.username,
-         role:user.role
-     },
-     });
- 
-   } catch (err) {
-     console.error('Login error:', err);
-     return res.status(500).json({ message: err.message });
-   }
- };
-     
+        name: user.username,
+        role: user.role
+      },
+    });
+
+  } catch (err) {
+    console.error('Login error:', err);
+    return res.status(500).json({ message: err.message });
+  }
+};
+
 export const addBlog = async (req, res) => {
   let image;
 
   try {
     const { title, body, author_name } = req.body;
 
-    if (!title || !body || !author_name ) {
+    if (!title || !body || !author_name) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -158,7 +174,7 @@ export const addBlog = async (req, res) => {
         return res.status(500).json({ message: error.message });
       }
     }
-    
+
     const [result] = await pool.query(
       `INSERT INTO blogs (title, body, author_name, image_url, image_public_id)
        VALUES (?, ?, ?, ?, ?)`,
@@ -228,18 +244,18 @@ export const updateBlog = async (req, res) => {
     const { id } = req.params;
     const { title, body, author_name } = req.body;
 
-    
+
     if (!id) {
       return res.status(400).json({ message: "Blog ID is required" });
     }
 
     const fileBuffer = req.file?.buffer
 
-    if(!fileBuffer){
+    if (!fileBuffer) {
       return res.status(400).json({ message: "image is required required" })
     }
 
-    if ( !title || !body || !author_name ) {
+    if (!title || !body || !author_name) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -253,13 +269,13 @@ export const updateBlog = async (req, res) => {
       `UPDATE blogs 
        SET title = ?, body = ?, author_name = ?, image_url = ?,image_public_id = ?
        WHERE id = ?`,
-      [ 
-       title,
-       body, 
-       author_name, 
-       image?.secure_url || null,
-       image?.public_id || null,
-       id
+      [
+        title,
+        body,
+        author_name,
+        image?.secure_url || null,
+        image?.public_id || null,
+        id
       ]
     );
 
@@ -267,9 +283,9 @@ export const updateBlog = async (req, res) => {
       return res.status(404).json({ message: "Blog not found" });
     }
 
-  return res.status(200).json({
+    return res.status(200).json({
       message: "Blog updated successfully",
-  });
+    });
   } catch (err) {
     console.error("updateBlog error:", err);
     return res.status(500).json({ message: "Internal server error" });
