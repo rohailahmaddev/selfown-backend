@@ -11,7 +11,6 @@ export const getBlogs = async (req, res) => {
       title,
       body,
       author_name,
-      date,
       image_url,
       created_at
    FROM blogs
@@ -30,7 +29,7 @@ export const getSingleBlog = async (req, res) => {
   try {
     const { id } = req.params
     const [blogs] = await pool.query(
-      `SELECT id,image_url, title, body,author_name, date,created_at
+      `SELECT id,image_url, title, body,author_name, created_at
        FROM blogs
        WHERE id = ?`, [id]
     );
@@ -44,7 +43,6 @@ export const getSingleBlog = async (req, res) => {
       title,
       body,
       author_name,
-      date,
       image_url,
       created_at
    FROM blogs

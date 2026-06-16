@@ -21,7 +21,6 @@ export const Scheme = async() => {
            id INT AUTO_INCREMENT PRIMARY KEY,
            title VARCHAR(255) NOT NULL,
            author_name VARCHAR(255) NOT NULL,
-           date DATE NOT NULL,
            body TEXT NOT NULL,
            image_url VARCHAR(500),
            image_public_id VARCHAR(255),
