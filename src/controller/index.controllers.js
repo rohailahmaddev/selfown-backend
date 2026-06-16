@@ -13,9 +13,7 @@ export const getBlogs = async (req, res) => {
           author_name,
           date,
           image_url,
-          image_public_id,
           created_at,
-          updated_at
        FROM blogs
        ORDER BY created_at DESC`
      );

@@ -16,20 +16,15 @@ export const uploadOnCloudinary = (buffer, folder = "uploads") => {
   return new Promise((resolve, reject) => {
     // Input validation
     if (!buffer || !Buffer.isBuffer(buffer)) {
-      console.log("R")
       return reject(new Error("Invalid buffer"));
     }
-     console.log("O")
+    
     if (buffer.length === 0) {
-      console.log("H")
       return reject(new Error("Buffer is empty"));
     }
-     console.log("H")
     if (buffer.length > 10 * 1024 * 1024) {
-      console.log("bufferlength")
       return reject(new Error("File too large"));
     }
-    console.log("A")
     let isSettled = false;
 
     const safeResolve = (result) => {
@@ -48,13 +43,10 @@ export const uploadOnCloudinary = (buffer, folder = "uploads") => {
      
     
     const readStream = streamifier.createReadStream(buffer);
-    console.log("rohail")
     const timeout = setTimeout(() => {
-      console.log("I")
       safeReject(new Error("Upload timed out"));
       readStream.destroy();
     }, UPLOAD_TIMEOUT);
-    console.log("Before upload_stream");
 
     const stream = cloudinary.uploader.upload_stream(
       { resource_type: "auto", folder },
@@ -71,8 +63,6 @@ export const uploadOnCloudinary = (buffer, folder = "uploads") => {
       }
     );
     
-    console.log("After upload_stream");
-    
     stream.on("error", (err) => {
       console.log("Stream Error:", err);
       safeReject(err);
@@ -88,8 +78,7 @@ export const uploadOnCloudinary = (buffer, folder = "uploads") => {
     });
     
     readStream.pipe(stream);
-    
-    console.log("Pipe initiated");
+
   });
 };
 
